@@ -85,6 +85,10 @@
   // 前のマスから次のマスへの途中位置を補間して描く
   let accumMs = 0;          // 前回の1マス移動からの経過時間（一時停止中は止まる）
   let lastFrameTime = null;
+  // 描画のフレームレート上限（ヌルヌルしすぎないよう 30fps 程度に抑える）
+  const TARGET_FPS = 30;
+  const FRAME_INTERVAL_MS = 1000 / TARGET_FPS;
+  let lastRenderTime = -Infinity;
   let hasMotion = false;    // 補間すべき直前の移動があるか
   let prevTail = null;      // 直前の移動で抜けた尻尾のマス（捕食時は null）
   let eatenApple = null;    // 直前に食べたリンゴ（縮みながら消える演出用）
@@ -320,7 +324,11 @@
       }
     }
 
-    render();
+    // 30fps 相当の間隔が経ったときだけ描き直す（ロジックの進行は毎フレーム正確に計測）
+    if (now - lastRenderTime >= FRAME_INTERVAL_MS - 1) {
+      lastRenderTime = now;
+      render();
+    }
     requestAnimationFrame(frame);
   }
 
