@@ -1,12 +1,12 @@
 /* ==========================================================================
-   Minimal Monotone Aesthetics CSS - Snake AI & Vinyl Music Player
+   Minimal Monotone Aesthetics CSS - Borderless Modern Layout
+   Snake AI & Vinyl Music Player with Bootstrap Icons
    ========================================================================== */
 
 :root {
-  --bg-color: #f8f9fa;
+  --bg-color: #fafafa;
   --surface-card: #ffffff;
   --border-light: #e5e7eb;
-  --border-subtle: #f1f5f9;
 
   --text-primary: #0f172a;
   --text-secondary: #475569;
@@ -22,11 +22,10 @@
 
   --radius-sm: 8px;
   --radius-md: 14px;
-  --radius-lg: 22px;
+  --radius-lg: 20px;
   --radius-full: 9999px;
 
   --shadow-subtle: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.03);
-  --shadow-hover: 0 8px 30px -4px rgba(15, 23, 42, 0.08);
 }
 
 *, *::before, *::after {
@@ -41,19 +40,167 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 32px 20px;
+  padding: 36px 24px;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Two-Column Responsive Layout */
+/* ==========================================================================
+   Footer: 利用規約・注意事項（リンクのみ控えめに表示 → クリックでポップアップ）
+   ========================================================================== */
+.site-footer {
+  /* ウィンドウ下端に固定：左にバージョン、右に利用規約 */
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 12px;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none; /* 中央の空白部分はクリックを下に通す */
+}
+
+.site-footer > * {
+  pointer-events: auto;
+}
+
+.version-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  padding: 4px 6px;
+}
+
+.footer-link {
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-decoration-color: var(--border-light);
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.footer-link:hover {
+  color: var(--text-primary);
+}
+
+/* Popup Dialog */
+.terms-dialog {
+  margin: auto;
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  padding: 0;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  color: var(--text-secondary);
+  box-shadow: 0 24px 60px -12px rgba(15, 23, 42, 0.25);
+}
+
+.terms-dialog[open] {
+  animation: termsFadeIn 0.18s ease;
+}
+
+.terms-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.35);
+}
+
+@keyframes termsFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.terms-content {
+  padding: 24px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-size: 0.8rem;
+  line-height: 1.8;
+}
+
+.terms-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.terms-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.terms-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  padding: 4px;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.terms-close:hover {
+  color: var(--text-primary);
+}
+
+.footer-heading {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.footer-list {
+  list-style: none;
+}
+
+.footer-list > li {
+  position: relative;
+  padding-left: 0.9em;
+}
+
+.footer-list > li::before {
+  content: "・";
+  position: absolute;
+  left: -0.15em;
+}
+
+.footer-credits {
+  list-style: none;
+  padding-left: 0.5em;
+}
+
+.footer-credits li::before {
+  content: "— ";
+}
+
+.terms-dialog a {
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--border-light);
+  text-underline-offset: 2px;
+}
+
+/* Two-Column Responsive Layout (Clean & Open) */
 .app-layout {
   width: 100%;
-  max-width: 980px;
+  max-width: 960px;
   display: grid;
-  grid-template-columns: minmax(0, 520px) minmax(0, 360px);
-  gap: 36px;
+  grid-template-columns: minmax(0, 500px) minmax(0, 360px);
+  gap: 56px;
   align-items: center;
   justify-content: center;
 }
@@ -61,22 +208,18 @@ body {
 @media (max-width: 860px) {
   .app-layout {
     grid-template-columns: 1fr;
-    max-width: 520px;
-    gap: 32px;
+    max-width: 500px;
+    gap: 40px;
   }
-}
-
-/* Common Card Style */
-.snake-card, .player-card {
-  display: flex;
-  flex-direction: column;
 }
 
 /* ==========================================================================
    Snake Game Component
    ========================================================================== */
-.snake-card {
+.snake-section {
   width: 100%;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 
@@ -138,99 +281,137 @@ body {
   margin-top: 4px;
 }
 
+/* Start / Pause Button
+   - 真っ黒ではなく、黒に近いグレーのモノトーンで目に優しく
+   - 押した瞬間に沈み込むフィードバック、タップ時の青いハイライトは無効化 */
 .primary-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background-color: var(--btn-dark);
-  color: #ffffff;
-  border: none;
+  min-height: 46px;
+  padding: 0 30px;
+  background-color: #3f3f46;
+  color: #fafafa;
+  border: 1px solid #3f3f46;
+  box-shadow: 0 2px 6px rgba(24, 24, 27, 0.12);
+  border-radius: var(--radius-full);
   font-family: var(--font-sans);
   font-size: 0.92rem;
-  font-weight: 500;
-  padding: 11px 32px;
-  border-radius: var(--radius-full);
+  font-weight: 600;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
-  transition: all 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease;
 }
 
-.primary-btn:hover {
-  background-color: var(--btn-dark-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.2);
+.primary-btn .btn-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+  display: inline-flex;
 }
 
+.primary-btn:active {
+  transform: scale(0.96);
+  background-color: #27272a;
+  border-color: #27272a;
+  box-shadow: none;
+}
+
+.primary-btn:focus-visible {
+  outline: 2px solid var(--text-muted);
+  outline-offset: 3px;
+}
+
+/* 走行中（一時停止ボタン）：一段沈んだ淡いグレー */
 .primary-btn.running {
   background-color: var(--btn-light);
   color: var(--text-secondary);
+  border-color: transparent;
   box-shadow: none;
 }
-.primary-btn.running:hover {
+
+.primary-btn.running:active {
   background-color: var(--btn-light-hover);
 }
 
+/* ホバーはマウス操作の端末のみ（スマホでホバー状態が残るのを防ぐ） */
+@media (hover: hover) {
+  .primary-btn:hover {
+    background-color: #52525b;
+    border-color: #52525b;
+  }
+
+  .primary-btn.running:hover {
+    background-color: var(--btn-light-hover);
+    border-color: #cbd5e1;
+  }
+
+  .text-btn:hover {
+    color: var(--text-primary);
+  }
+}
+
 .text-btn {
+  min-height: 46px;
   background: none;
   border: none;
   color: var(--text-muted);
   font-family: var(--font-sans);
   font-size: 0.85rem;
   cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 6px;
-  transition: color 0.15s ease;
+  padding: 0 14px;
+  border-radius: var(--radius-full);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
 
-.text-btn:hover {
+.text-btn:active {
+  background-color: var(--btn-light);
   color: var(--text-primary);
 }
 
 /* ==========================================================================
-   Monotone Vinyl Music Player Component
+   Monotone Vinyl Music Player - Borderless & Clean (No Div Card Box)
    ========================================================================== */
-.player-card {
+.player-section {
   width: 100%;
-  background-color: var(--surface-card);
-  border: 1.5px solid var(--border-light);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-subtle);
-  padding: 32px 28px;
+  /* Divフレーム（四角い囲み枠）を撤廃し、背景に溶け込むクリーンな配置 */
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 8px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  transition: box-shadow 0.25s ease;
-}
-
-.player-card:hover {
-  box-shadow: var(--shadow-hover);
 }
 
 /* 1. Record Disc (Vinyl) */
 .record-wrapper {
-  margin-bottom: 24px;
-  padding: 8px;
+  margin-bottom: 22px;
   position: relative;
 }
 
 .record-disc {
-  width: 190px;
-  height: 190px;
+  width: 196px;
+  height: 196px;
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    #1f242d 0%,
-    #11141a 38%,
-    #252b36 39%,
-    #11141a 41%,
-    #1a1f28 65%,
-    #0c0e12 100%
+    #1e232b 0%,
+    #111317 38%,
+    #232832 39%,
+    #111317 41%,
+    #181c24 65%,
+    #0c0e11 100%
   );
   box-shadow: 
-    0 12px 28px -6px rgba(0, 0, 0, 0.35),
-    0 2px 6px rgba(0, 0, 0, 0.2),
+    0 14px 32px -6px rgba(0, 0, 0, 0.28),
+    0 4px 10px rgba(0, 0, 0, 0.14),
     inset 0 0 0 1px rgba(255, 255, 255, 0.08);
   position: relative;
   display: flex;
@@ -248,18 +429,18 @@ body {
   box-shadow: 
     inset 0 0 0 10px rgba(255, 255, 255, 0.02),
     inset 0 0 0 24px rgba(255, 255, 255, 0.015),
-    inset 0 0 0 38px rgba(255, 255, 255, 0.02);
+    inset 0 0 0 40px rgba(255, 255, 255, 0.02);
   pointer-events: none;
 }
 
 /* Center Artwork Label */
 .record-center {
-  width: 90px;
-  height: 90px;
+  width: 92px;
+  height: 92px;
   border-radius: 50%;
   overflow: hidden;
   position: relative;
-  box-shadow: 0 0 0 3px #1a1e27, 0 2px 8px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 3px #181c24, 0 2px 8px rgba(0, 0, 0, 0.5);
   background: #0f172a;
 }
 
@@ -268,10 +449,10 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
-  filter: grayscale(20%) contrast(1.05);
+  filter: grayscale(15%) contrast(1.05);
 }
 
-/* Spindle Hole */
+/* Center Spindle Hole */
 .record-spindle {
   position: absolute;
   top: 50%;
@@ -280,7 +461,7 @@ body {
   width: 14px;
   height: 14px;
   background-color: var(--bg-color);
-  border: 2px solid #2d3748;
+  border: 2px solid #232832;
   border-radius: 50%;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
 }
@@ -307,7 +488,7 @@ body {
 /* 2. Track Information */
 .track-info {
   width: 100%;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -319,28 +500,54 @@ body {
   font-weight: 600;
   letter-spacing: 0.12em;
   color: var(--text-muted);
-  background: var(--btn-light);
+  background: rgba(0, 0, 0, 0.04);
   padding: 3px 10px;
   border-radius: var(--radius-full);
   margin-bottom: 10px;
 }
 
+/* Title & YouTube URL Link Row */
+.track-title-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
 .track-title {
-  font-size: 1.15rem;
+  font-size: 1.18rem;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.01em;
-  margin-bottom: 4px;
-  max-width: 280px;
+  margin-bottom: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* YouTube External Link Icon (box-arrow-up) */
+.youtube-link {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: color 0.15s ease, transform 0.15s ease;
+  padding: 2px;
+}
+
+.youtube-link:hover {
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
 .track-artist {
-  font-size: 0.85rem;
+  font-size: 0.86rem;
   color: var(--text-secondary);
   font-weight: 500;
+  margin-top: 4px;
 }
 
 /* 3. Player Controls Bar */
@@ -348,17 +555,16 @@ body {
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border-subtle);
+  justify-content: center;
+  gap: 20px;
+  padding-top: 14px;
 }
 
 /* Playback buttons (Prev, Play, Next) */
 .playback-buttons {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .player-btn {
@@ -373,72 +579,116 @@ body {
 }
 
 .icon-btn {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   color: var(--text-secondary);
-  background-color: var(--btn-light);
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-light);
+  font-size: 1rem;
 }
 
 .icon-btn:hover {
   color: var(--text-primary);
-  background-color: var(--btn-light-hover);
+  border-color: #cbd5e1;
+  background-color: #ffffff;
   transform: translateY(-1px);
 }
 
 .play-main-btn {
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   background-color: var(--btn-dark);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+  font-size: 1.35rem;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
 }
 
 .play-main-btn:hover {
   background-color: var(--btn-dark-hover);
   transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.24);
 }
 
 .play-main-btn:active {
   transform: scale(0.98);
 }
 
-/* Volume Container */
-.volume-container {
-  display: flex;
+/* Volume Control (Frameless: 左に volume-off-fill アイコン、右に調節バー) */
+.volume-control {
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: var(--btn-light);
-  padding: 6px 10px;
-  border-radius: var(--radius-full);
-}
-
-.volume-btn {
+  gap: 10px;
   background: none;
   border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2px;
-  border-radius: 4px;
-  transition: color 0.15s ease;
+  box-shadow: none;
+  padding: 0;
 }
 
-.volume-btn:hover {
-  color: var(--text-primary);
-}
-
-.volume-slider {
+.volume-icon-btn {
   -webkit-appearance: none;
   appearance: none;
-  width: 60px;
+  background: none;
+  border: none;
+  box-shadow: none;
+  outline: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  padding: 0;
+  line-height: 1;
+  transition: opacity 0.15s ease;
+}
+
+.volume-icon-btn:hover {
+  opacity: 0.65;
+}
+
+/* ミュート中はアイコンを薄く表示 */
+.volume-icon-btn.muted {
+  opacity: 0.35;
+}
+
+.volume-icon-btn:focus-visible {
+  outline: 2px solid var(--text-muted);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Volume Slider: 動かした分は黒、残りの領域は灰色 */
+.volume-slider {
+  --vol-percent: 70%;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 88px;
   height: 4px;
+  margin: 0;
+  padding: 0;
+  border: none;
   border-radius: var(--radius-full);
-  background: #cbd5e1;
   outline: none;
   cursor: pointer;
+  background: linear-gradient(
+    to right,
+    #000000 0%,
+    #000000 var(--vol-percent),
+    #d1d5db var(--vol-percent),
+    #d1d5db 100%
+  );
+}
+
+.volume-slider:focus-visible {
+  outline: 2px solid var(--text-muted);
+  outline-offset: 6px;
+}
+
+/* Chrome, Safari, Edge */
+.volume-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: transparent;
+  border: none;
 }
 
 .volume-slider::-webkit-slider-thumb {
@@ -446,37 +696,177 @@ body {
   appearance: none;
   width: 12px;
   height: 12px;
+  margin-top: -4px; /* 4pxのバーに対して12pxのつまみを中央に配置 */
+  border: none;
   border-radius: 50%;
-  background: var(--btn-dark);
+  background: #000000;
   cursor: pointer;
   transition: transform 0.15s ease;
 }
 
-.volume-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.25);
+.volume-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.2);
+}
+
+/* Firefox */
+.volume-slider::-moz-range-track {
+  height: 4px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: #d1d5db;
+}
+
+.volume-slider::-moz-range-progress {
+  height: 4px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: #000000;
 }
 
 .volume-slider::-moz-range-thumb {
   width: 12px;
   height: 12px;
-  border-radius: 50%;
-  background: var(--btn-dark);
   border: none;
+  border-radius: 50%;
+  background: #000000;
   cursor: pointer;
+}
+
+/* ==========================================================================
+   Mobile Layout (≤ 860px)
+   - 盤面を主役に、プレイヤーはレコード左・曲情報右のコンパクトな横並び
+   - 利用規約リンクは固定表示をやめ、ページ末尾に配置（内容との重なり防止）
+   ========================================================================== */
+@media (max-width: 860px) {
+  body {
+    justify-content: flex-start;
+    padding: 20px 16px calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .app-layout {
+    gap: 28px;
+  }
+
+  .snake-section {
+    gap: 12px;
+  }
+
+  .board-frame {
+    border-radius: var(--radius-md);
+  }
+
+  /* スタートボタンを押しやすい幅に */
+  .controls {
+    gap: 8px;
+    margin-top: 0;
+  }
+
+  .primary-btn {
+    flex: 1;
+    min-height: 50px;
+    padding: 0 20px;
+  }
+
+  /* プレイヤー：レコード | 曲情報 / 操作ボタン */
+  .player-section {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "record info"
+      "controls controls";
+    align-items: center;
+    column-gap: 18px;
+    row-gap: 14px;
+    padding: 0;
+    text-align: left;
+  }
+
+  .record-wrapper {
+    grid-area: record;
+    margin: 0;
+  }
+
+  .record-disc {
+    width: 96px;
+    height: 96px;
+  }
+
+  .record-grooves {
+    inset: 6px;
+  }
+
+  .record-center {
+    width: 46px;
+    height: 46px;
+    box-shadow: 0 0 0 2px #181c24, 0 1px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  .record-spindle {
+    width: 8px;
+    height: 8px;
+    border-width: 1.5px;
+  }
+
+  .track-info {
+    grid-area: info;
+    margin: 0;
+    align-items: flex-start;
+    min-width: 0;
+  }
+
+  .track-badge {
+    margin-bottom: 6px;
+  }
+
+  .track-title-row {
+    justify-content: flex-start;
+  }
+
+  .track-title {
+    font-size: 1.05rem;
+  }
+
+  .player-controls {
+    grid-area: controls;
+    justify-content: space-between;
+    padding-top: 0;
+  }
+
+  .volume-slider {
+    width: 104px;
+  }
+
+  /* 利用規約リンク：ページ末尾に通常配置 */
+  .site-footer {
+    position: static;
+    width: 100%;
+    max-width: 500px;
+    margin-top: 28px;
+  }
+}
+
+/* 小さい画面（〜360px）での微調整 */
+@media (max-width: 360px) {
+  .player-section {
+    column-gap: 14px;
+  }
+
+  .record-disc {
+    width: 84px;
+    height: 84px;
+  }
+
+  .record-center {
+    width: 40px;
+    height: 40px;
+  }
+
+  .volume-slider {
+    width: 80px;
+  }
 }
 
 /* Utility Hidden */
 .hidden {
   display: none !important;
-}
-
-/* Hidden YouTube IFrame Container */
-.hidden-youtube-container {
-  position: absolute;
-  top: -9999px;
-  left: -9999px;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
 }
