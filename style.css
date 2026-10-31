@@ -1,0 +1,482 @@
+/* ==========================================================================
+   Minimal Monotone Aesthetics CSS - Snake AI & Vinyl Music Player
+   ========================================================================== */
+
+:root {
+  --bg-color: #f8f9fa;
+  --surface-card: #ffffff;
+  --border-light: #e5e7eb;
+  --border-subtle: #f1f5f9;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+
+  --btn-dark: #0f172a;
+  --btn-dark-hover: #1e293b;
+  --btn-light: #f1f5f9;
+  --btn-light-hover: #e2e8f0;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-full: 9999px;
+
+  --shadow-subtle: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.03);
+  --shadow-hover: 0 8px 30px -4px rgba(15, 23, 42, 0.08);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Two-Column Responsive Layout */
+.app-layout {
+  width: 100%;
+  max-width: 980px;
+  display: grid;
+  grid-template-columns: minmax(0, 520px) minmax(0, 360px);
+  gap: 36px;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 860px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+    max-width: 520px;
+    gap: 32px;
+  }
+}
+
+/* Common Card Style */
+.snake-card, .player-card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   Snake Game Component
+   ========================================================================== */
+.snake-card {
+  width: 100%;
+  gap: 16px;
+}
+
+.top-bar {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0 4px;
+}
+
+.score-display {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.score-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.score-num {
+  font-family: var(--font-mono);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.status-indicator {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.board-frame {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: var(--surface-card);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-subtle);
+  overflow: hidden;
+  display: flex;
+}
+
+#gameCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: var(--btn-dark);
+  color: #ffffff;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 500;
+  padding: 11px 32px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+  transition: all 0.18s ease;
+}
+
+.primary-btn:hover {
+  background-color: var(--btn-dark-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.2);
+}
+
+.primary-btn.running {
+  background-color: var(--btn-light);
+  color: var(--text-secondary);
+  box-shadow: none;
+}
+.primary-btn.running:hover {
+  background-color: var(--btn-light-hover);
+}
+
+.text-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: color 0.15s ease;
+}
+
+.text-btn:hover {
+  color: var(--text-primary);
+}
+
+/* ==========================================================================
+   Monotone Vinyl Music Player Component
+   ========================================================================== */
+.player-card {
+  width: 100%;
+  background-color: var(--surface-card);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-subtle);
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: box-shadow 0.25s ease;
+}
+
+.player-card:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+/* 1. Record Disc (Vinyl) */
+.record-wrapper {
+  margin-bottom: 24px;
+  padding: 8px;
+  position: relative;
+}
+
+.record-disc {
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    #1f242d 0%,
+    #11141a 38%,
+    #252b36 39%,
+    #11141a 41%,
+    #1a1f28 65%,
+    #0c0e12 100%
+  );
+  box-shadow: 
+    0 12px 28px -6px rgba(0, 0, 0, 0.35),
+    0 2px 6px rgba(0, 0, 0, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(0deg);
+}
+
+/* Subtle vinyl micro-grooves */
+.record-grooves {
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 255, 255, 0.05);
+  box-shadow: 
+    inset 0 0 0 10px rgba(255, 255, 255, 0.02),
+    inset 0 0 0 24px rgba(255, 255, 255, 0.015),
+    inset 0 0 0 38px rgba(255, 255, 255, 0.02);
+  pointer-events: none;
+}
+
+/* Center Artwork Label */
+.record-center {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 0 3px #1a1e27, 0 2px 8px rgba(0, 0, 0, 0.5);
+  background: #0f172a;
+}
+
+.record-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: grayscale(20%) contrast(1.05);
+}
+
+/* Spindle Hole */
+.record-spindle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  background-color: var(--bg-color);
+  border: 2px solid #2d3748;
+  border-radius: 50%;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* Spin Animation */
+@keyframes spinVinyl {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.record-disc.playing {
+  animation: spinVinyl 16s linear infinite;
+}
+
+.record-disc.paused {
+  animation: spinVinyl 16s linear infinite;
+  animation-play-state: paused;
+}
+
+/* 2. Track Information */
+.track-info {
+  width: 100%;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.track-badge {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  background: var(--btn-light);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  margin-bottom: 10px;
+}
+
+.track-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.track-artist {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* 3. Player Controls Bar */
+.player-controls {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Playback buttons (Prev, Play, Next) */
+.playback-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.player-btn {
+  border: none;
+  background: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.18s ease;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  color: var(--text-secondary);
+  background-color: var(--btn-light);
+}
+
+.icon-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--btn-light-hover);
+  transform: translateY(-1px);
+}
+
+.play-main-btn {
+  width: 46px;
+  height: 46px;
+  background-color: var(--btn-dark);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+}
+
+.play-main-btn:hover {
+  background-color: var(--btn-dark-hover);
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25);
+}
+
+.play-main-btn:active {
+  transform: scale(0.98);
+}
+
+/* Volume Container */
+.volume-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--btn-light);
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+}
+
+.volume-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+}
+
+.volume-btn:hover {
+  color: var(--text-primary);
+}
+
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 60px;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: #cbd5e1;
+  outline: none;
+  cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--btn-dark);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.volume-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--btn-dark);
+  border: none;
+  cursor: pointer;
+}
+
+/* Utility Hidden */
+.hidden {
+  display: none !important;
+}
+
+/* Hidden YouTube IFrame Container */
+.hidden-youtube-container {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
