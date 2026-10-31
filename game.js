@@ -19,7 +19,6 @@
   const COLOR_SNAKE_BODY = '#10b981'; // Solid opaque emerald green
   const COLOR_APPLE_1 = '#ef4444';    // Red apple
   const COLOR_APPLE_2 = '#f59e0b';    // Amber apple
-  const COLOR_PATH = 'rgba(16, 185, 129, 0.2)'; // Subtle green preview
 
   // Direction Vectors
   const DIRS = [
@@ -76,12 +75,19 @@
   let snake = [];
   let apples = []; // [{x, y, id, color}, ...]
   let currentTargetApple = null;
-  let predictedPath = [];
   let score = 0;
   let isRunning = false;
   let isGameOver = false;
-  const stepIntervalMs = 70; // Smooth, pleasant viewing pace
-  let gameLoopTimeout = null;
+  const stepIntervalMs = 140; // ゆったり鑑賞できる速度（ms / 1マス）
+
+  // --- なめらかアニメーション用の状態 ---
+  // ロジックは stepIntervalMs ごとに1マス進み、描画は毎フレーム（requestAnimationFrame）
+  // 前のマスから次のマスへの途中位置を補間して描く
+  let accumMs = 0;          // 前回の1マス移動からの経過時間（一時停止中は止まる）
+  let lastFrameTime = null;
+  let hasMotion = false;    // 補間すべき直前の移動があるか
+  let prevTail = null;      // 直前の移動で抜けた尻尾のマス（捕食時は null）
+  let eatenApple = null;    // 直前に食べたリンゴ（縮みながら消える演出用）
 
   // DOM Elements
   const canvas = document.getElementById('gameCanvas');
@@ -109,10 +115,13 @@
 
   // --- Game Lifecycle ---
   function initGame() {
-    clearTimeout(gameLoopTimeout);
     isRunning = false;
     isGameOver = false;
     score = 0;
+    accumMs = 0;
+    hasMotion = false;
+    prevTail = null;
+    eatenApple = null;
 
     // Start with 3 segments along the cycle path
     // Around the middle area
@@ -126,7 +135,6 @@
     spawnNewApplesPair();
     updateAIPlan();
     updateUI();
-    render();
   }
 
   // Spawn 2 apples simultaneously
@@ -236,12 +244,6 @@
       }
     }
 
-    // 視覚的な予測ルート描画：現在地から次の一手、そしてターゲットリンゴへの最短軌跡
-    predictedPath = [head, bestNext];
-    if (!posEquals(bestNext, target)) {
-      predictedPath.push(target);
-    }
-
     return bestNext;
   }
 
@@ -261,6 +263,7 @@
   }
 
   // --- Step & Loop ---
+  // 1マス分のゲームロジック（描画はフレームループ側で行う）
   function step() {
     if (!isRunning || isGameOver) return;
 
@@ -286,20 +289,56 @@
 
     if (eatenIdx !== -1) {
       score++;
-      apples.splice(eatenIdx, 1);
+      eatenApple = apples.splice(eatenIdx, 1)[0];
+      prevTail = null; // 体が伸びるので尻尾は動かない
 
       // 2個とも食べたら次の2個が出現
       if (apples.length === 0) {
         spawnNewApplesPair();
       }
     } else {
-      snake.pop();
+      eatenApple = null;
+      prevTail = snake.pop();
     }
 
-    updateUI();
-    render();
+    hasMotion = true;
+    if (!isGameOver) updateUI();
+  }
 
-    gameLoopTimeout = setTimeout(step, stepIntervalMs);
+  // 毎フレーム呼ばれるループ：経過時間に応じてロジックを進め、補間して描画
+  function frame(now) {
+    if (lastFrameTime === null) lastFrameTime = now;
+    // タブ切り替え後などに一気に進みすぎないよう上限を設ける
+    const dt = Math.min(now - lastFrameTime, 100);
+    lastFrameTime = now;
+
+    if (isRunning && !isGameOver) {
+      accumMs += dt;
+      while (accumMs >= stepIntervalMs && isRunning && !isGameOver) {
+        accumMs -= stepIntervalMs;
+        step();
+      }
+    }
+
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  // 0 → 1：直前のマスから現在のマスまでの移動の進み具合
+  function getProgress() {
+    if (!hasMotion) return 1;
+    return Math.min(accumMs / stepIntervalMs, 1);
+  }
+
+  function lerpPoint(from, to, t) {
+    return {
+      x: (from.x + (to.x - from.x) * t + 0.5) * CELL_SIZE,
+      y: (from.y + (to.y - from.y) * t + 0.5) * CELL_SIZE
+    };
+  }
+
+  function cellCenter(p) {
+    return { x: (p.x + 0.5) * CELL_SIZE, y: (p.y + 0.5) * CELL_SIZE };
   }
 
   // --- Render ---
@@ -310,16 +349,13 @@
     // 1. Subtle Minimal Grid (14x14)
     drawGrid();
 
-    // 2. Optimized Route Line
-    if (predictedPath && predictedPath.length > 1) {
-      drawPath();
-    }
+    const t = getProgress();
 
-    // 3. Apples (2 items)
-    drawApples();
+    // 2. Apples (2 items)
+    drawApples(t);
 
-    // 4. Snake (Pure solid green, seamless, white eyes)
-    drawSnake();
+    // 3. Snake (Pure solid green, seamless, white eyes)
+    drawSnake(t);
   }
 
   function drawGrid() {
@@ -339,32 +375,18 @@
     }
   }
 
-  function drawPath() {
-    ctx.save();
-    ctx.strokeStyle = COLOR_PATH;
-    ctx.lineWidth = 2.5;
-    ctx.setLineDash([4, 6]);
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    for (let i = 0; i < predictedPath.length; i++) {
-      const node = predictedPath[i];
-      const cx = (node.x + 0.5) * CELL_SIZE;
-      const cy = (node.y + 0.5) * CELL_SIZE;
-      if (i === 0) {
-        ctx.moveTo(cx, cy);
-      } else {
-        ctx.lineTo(cx, cy);
-      }
+  function drawApples(t) {
+    const list = apples.map(a => ({ apple: a, scale: 1 }));
+    // 食べたリンゴは頭が近づくにつれて縮んで消える
+    if (eatenApple && hasMotion && t < 1) {
+      list.push({ apple: eatenApple, scale: 1 - t });
     }
-    ctx.stroke();
-    ctx.restore();
-  }
 
-  function drawApples() {
-    apples.forEach((apple) => {
+    list.forEach(({ apple, scale }) => {
       const cx = (apple.x + 0.5) * CELL_SIZE;
       const cy = (apple.y + 0.5) * CELL_SIZE;
-      const radius = CELL_SIZE * 0.36;
+      const radius = CELL_SIZE * 0.36 * scale;
+      if (radius <= 0.5) return;
 
       ctx.save();
       ctx.fillStyle = apple.color;
@@ -385,62 +407,57 @@
     });
   }
 
-  function drawSnake() {
+  function drawSnake(t) {
     if (snake.length === 0) return;
 
     const bodyWidth = CELL_SIZE * 0.74;
+    const capRadius = bodyWidth * 0.5;
 
     ctx.save();
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+    ctx.fillStyle = COLOR_SNAKE_BODY;
+    ctx.strokeStyle = COLOR_SNAKE_BODY;
 
     // 1. Single segment edge-case
     if (snake.length === 1) {
-      const cx = (snake[0].x + 0.5) * CELL_SIZE;
-      const cy = (snake[0].y + 0.5) * CELL_SIZE;
-      ctx.fillStyle = COLOR_SNAKE_BODY;
+      const c = cellCenter(snake[0]);
       ctx.beginPath();
-      ctx.arc(cx, cy, bodyWidth * 0.5, 0, Math.PI * 2);
+      ctx.arc(c.x, c.y, capRadius, 0, Math.PI * 2);
       ctx.fill();
-      drawEyes(cx, cy, bodyWidth * 0.5);
+      drawEyes(c.x, c.y, capRadius);
       ctx.restore();
       return;
     }
 
-    // 2. Completely opaque solid green continuous body (no transparency, no pattern)
+    // 2. 補間した頭・尻尾の位置を求める
+    //    頭：1つ前のマス(snake[1]) → 現在のマス(snake[0])
+    //    尻尾：抜けたマス(prevTail) → 現在の末尾(snake[n-1])
+    const last = snake.length - 1;
+    const headPos = hasMotion ? lerpPoint(snake[1], snake[0], t) : cellCenter(snake[0]);
+    const tailPos = (hasMotion && prevTail) ? lerpPoint(prevTail, snake[last], t) : cellCenter(snake[last]);
+
+    // 3. Completely opaque solid green continuous body
     ctx.beginPath();
-    for (let i = snake.length - 1; i >= 0; i--) {
-      const cx = (snake[i].x + 0.5) * CELL_SIZE;
-      const cy = (snake[i].y + 0.5) * CELL_SIZE;
-      if (i === snake.length - 1) {
-        ctx.moveTo(cx, cy);
-      } else {
-        ctx.lineTo(cx, cy);
-      }
+    ctx.moveTo(tailPos.x, tailPos.y);
+    for (let i = last; i >= 1; i--) {
+      const c = cellCenter(snake[i]);
+      ctx.lineTo(c.x, c.y);
     }
+    ctx.lineTo(headPos.x, headPos.y);
     ctx.lineWidth = bodyWidth;
-    ctx.strokeStyle = COLOR_SNAKE_BODY; // Solid opaque emerald green
     ctx.stroke();
 
-    // 3. Head cap
-    const head = snake[0];
-    const headX = (head.x + 0.5) * CELL_SIZE;
-    const headY = (head.y + 0.5) * CELL_SIZE;
-    ctx.fillStyle = COLOR_SNAKE_BODY;
+    // 4. Head & tail caps
     ctx.beginPath();
-    ctx.arc(headX, headY, bodyWidth * 0.5, 0, Math.PI * 2);
+    ctx.arc(headPos.x, headPos.y, capRadius, 0, Math.PI * 2);
     ctx.fill();
-
-    // 4. Tail cap
-    const tail = snake[snake.length - 1];
-    const tailX = (tail.x + 0.5) * CELL_SIZE;
-    const tailY = (tail.y + 0.5) * CELL_SIZE;
     ctx.beginPath();
-    ctx.arc(tailX, tailY, bodyWidth * 0.5, 0, Math.PI * 2);
+    ctx.arc(tailPos.x, tailPos.y, capRadius, 0, Math.PI * 2);
     ctx.fill();
 
     // 5. Pure white eyes only (no black)
-    drawEyes(headX, headY, bodyWidth * 0.5);
+    drawEyes(headPos.x, headPos.y, capRadius);
 
     ctx.restore();
   }
@@ -471,18 +488,18 @@
     scoreValue.textContent = score;
 
     if (isGameOver) {
-      statusText.textContent = '制覇！';
-      btnIcon.textContent = '↺';
+      // 状態テキストは triggerGameOver / triggerWin 側で設定
+      btnIcon.className = 'btn-icon bi bi-arrow-counterclockwise';
       btnText.textContent = 'もう一度';
       startBtn.classList.remove('running');
     } else if (isRunning) {
       statusText.textContent = '走行中';
-      btnIcon.textContent = '⏸';
+      btnIcon.className = 'btn-icon bi bi-pause-fill';
       btnText.textContent = '一時停止';
       startBtn.classList.add('running');
     } else {
       statusText.textContent = '待機中';
-      btnIcon.textContent = '▶';
+      btnIcon.className = 'btn-icon bi bi-play-fill';
       btnText.textContent = 'スタート';
       startBtn.classList.remove('running');
     }
@@ -491,39 +508,36 @@
   function toggleStart() {
     if (isGameOver) {
       initGame();
-      isRunning = true;
-      updateUI();
-      step();
-      return;
     }
 
     if (isRunning) {
+      // 一時停止：移動途中の位置のまま止まる
       isRunning = false;
-      clearTimeout(gameLoopTimeout);
       updateUI();
     } else {
       isRunning = true;
       updateUI();
-      step();
+      // 静止状態からの開始時はすぐに1マス目を動き出す
+      if (!hasMotion) {
+        accumMs = 0;
+        step();
+      }
     }
   }
 
   function triggerGameOver() {
     isRunning = false;
     isGameOver = true;
-    statusText.textContent = '停止（身体接触）';
-    clearTimeout(gameLoopTimeout);
+    hasMotion = false;
     updateUI();
-    render();
+    statusText.textContent = '停止（身体接触）';
   }
 
   function triggerWin() {
     isRunning = false;
     isGameOver = true;
-    statusText.textContent = '完全制覇！';
-    clearTimeout(gameLoopTimeout);
     updateUI();
-    render();
+    statusText.textContent = '完全制覇！';
   }
 
   // Listeners
@@ -534,4 +548,5 @@
 
   // Init
   initGame();
+  requestAnimationFrame(frame);
 })();
